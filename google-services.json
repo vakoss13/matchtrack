@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "556268410189",
+    "project_id": "matchtrack-26e48",
+    "storage_bucket": "matchtrack-26e48.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556268410189:android:b85f284a8e8e91b3d79304",
+        "android_client_info": {
+          "package_name": "com.aploid.matchtrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHwsvecWQlpwKdxNd-UZSqjkZSWb1VYcc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

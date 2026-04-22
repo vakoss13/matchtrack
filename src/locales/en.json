@@ -1,0 +1,141 @@
+{
+  "translation": {
+    "common": {
+      "appName": "MatchTrack",
+      "loading": "Loading...",
+      "cancel": "Cancel",
+      "pts": "pts",
+      "success": "Success",
+      "error": "Error",
+      "anonymous": "Anonymous",
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "auth": {
+      "title": {
+        "signIn": "Welcome back to MatchTrack",
+        "signUp": "Create your account"
+      },
+      "label": {
+        "email": "Email",
+        "password": "Password",
+        "or": "OR"
+      },
+      "button": {
+        "signIn": "Sign In",
+        "signUp": "Sign Up",
+        "google": "Continue with Google"
+      },
+      "link": {
+        "signIn": "Already have an account? Sign In",
+        "signUp": "Don't have an account? Sign Up"
+      },
+      "validation": {
+        "required": "Please enter both email and password"
+      },
+      "message": {
+        "confirmation": "Check your email for confirmation!"
+      }
+    },
+    "tabs": {
+      "home": "Home",
+      "matches": "Matches",
+      "leaderboard": "Leaderboard",
+      "friends": "Friends",
+      "settings": "Settings"
+    },
+    "matchScreen": {
+      "featured": "FEATURED EVENTS",
+      "makePrediction": "Make a Prediction",
+      "predictionSaved": "Prediction saved!",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "all": "All",
+      "noMatches": "No matches found",
+      "homeWin": "W1",
+      "draw": "X",
+      "awayWin": "W2",
+      "editPrediction": "Edit Prediction",
+      "scoreTitle": "Prediction",
+      "save": "SAVE",
+      "searchPlaceholder": "Search teams..."
+    },
+    "friends": {
+      "title": "Friends",
+      "searchPlaceholder": "Search friends...",
+      "yourFriends": "YOUR FRIENDS",
+      "requests": "FRIEND REQUESTS",
+      "searchResults": "SEARCH RESULTS",
+      "addFriend": "Add",
+      "pending": "Pending",
+      "accept": "Accept",
+      "decline": "Decline",
+      "noFriends": "You don't have friends yet",
+      "noRequests": "No new requests",
+      "noResults": "No users found"
+    },
+    "leaderboard": {
+      "title": "Leaderboard"
+    },
+    "drawer": {
+      "profile": "Friends",
+      "statistics": "Statistics",
+      "myPredictions": "My Predictions",
+      "settings": "Settings",
+      "predictions": "MY PREDICTIONS",
+      "leagues": "FAST LEAGUES",
+      "yourPick": "Your Pick"
+    },
+    "settings": {
+      "appearance": "Appearance",
+      "darkMode": "Dark Mode",
+      "language": "Language",
+      "logout": "Logout",
+      "logoutConfirm": "Are you sure you want to logout?",
+      "editProfile": "Edit Profile"
+    },
+    "stats": {
+      "overallSuccess": "OVERALL SUCCESS",
+      "activity": "ACTIVITY",
+      "wins": "Wins",
+      "losses": "Losses",
+      "bets": "Bets",
+      "averageChance": "Avg Chance",
+      "won": "Won:",
+      "lost": "Lost:",
+      "pending": "Pending:",
+      "successRate": "% success",
+      "completed": "completed",
+      "winRate": "WIN RATE"
+    },
+    "predictionsScreen": {
+      "active": "Active",
+      "history": "History",
+      "liveInPlay": "LIVE - IN PLAY",
+      "result": "RESULT:",
+      "status_WON": "WON",
+      "status_LOST": "LOST",
+      "status_PENDING": "PENDING"
+    },
+    "editProfileScreen": {
+      "title": "Edit Profile",
+      "displayName": "Display Name",
+      "enterName": "Enter your name",
+      "saveChanges": "Save Changes",
+      "updateAvatar": "Update Avatar",
+      "chooseGallery": "Choose from Gallery",
+      "chooseSystem": "Choose System Avatar",
+      "systemAvatars": "System Avatars",
+      "successMessage": "Profile updated successfully!",
+      "errorGallery": "Permission to access camera roll is required."
+    },
+    "chat": {
+      "placeholder": "Message...",
+      "online": "online",
+      "offline": "offline",
+      "typing": "typing...",
+      "read": "read",
+      "sent": "sent"
+    }
+  }
+}

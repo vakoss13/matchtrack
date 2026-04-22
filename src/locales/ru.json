@@ -1,0 +1,138 @@
+{
+  "translation": {
+    "common": {
+      "appName": "MatchTrack",
+      "loading": "Загрузка...",
+      "cancel": "Отмена",
+      "pts": "очков",
+      "success": "Успешно",
+      "error": "Ошибка",
+      "anonymous": "Аноним",
+      "today": "Сегодня",
+      "yesterday": "Вчера"
+    },
+    "auth": {
+      "title": {
+        "signIn": "С возвращением в MatchTrack",
+        "signUp": "Создать аккаунт"
+      },
+      "label": {
+        "email": "Email",
+        "password": "Пароль",
+        "or": "ИЛИ"
+      },
+      "button": {
+        "signIn": "Войти",
+        "signUp": "Регистрация",
+        "google": "Войти через Google"
+      },
+      "link": {
+        "signIn": "Уже есть аккаунт? Войти",
+        "signUp": "Нет аккаунта? Регистрация"
+      },
+      "validation": {
+        "required": "Введите email и пароль"
+      },
+      "message": {
+        "confirmation": "Проверьте почту для подтверждения!"
+      }
+    },
+    "tabs": {
+      "home": "Главная",
+      "matches": "Матчи",
+      "leaderboard": "Рейтинг",
+      "friends": "Друзья",
+      "settings": "Настройки"
+    },
+    "matchScreen": {
+      "featured": "ГЛАВНЫЕ СОБЫТИЯ",
+      "makePrediction": "Сделать прогноз",
+      "predictionSaved": "Прогноз сохранен!",
+      "today": "Сегодня",
+      "tomorrow": "Завтра",
+      "all": "Все",
+      "noMatches": "Матчей не найдено",
+      "homeWin": "П1",
+      "draw": "X",
+      "awayWin": "П2",
+      "editPrediction": "Изменить прогноз",
+      "scoreTitle": "Прогноз на счет",
+      "save": "СОХРАНИТЬ",
+      "searchPlaceholder": "Поиск команды..."
+    },
+    "drawer": {
+      "profile": "Друзья",
+      "statistics": "Статистика",
+      "myPredictions": "Мои прогнозы",
+      "settings": "Настройки",
+      "predictions": "МОИ ПРОГНОЗЫ",
+      "leagues": "БЫСТРЫЕ ЛИГИ",
+      "yourPick": "Твой выбор"
+    },
+    "settings": {
+      "appearance": "Внешний вид",
+      "darkMode": "Темная тема",
+      "language": "Язык",
+      "logout": "Выйти из аккаунта",
+      "logoutConfirm": "Вы уверены, что хотите выйти?",
+      "editProfile": "Редактировать профиль"
+    },
+    "stats": {
+      "overallSuccess": "ОБЩИЙ УСПЕХ",
+      "activity": "АКТИВНОСТЬ",
+      "wins": "Побед",
+      "losses": "Проигрыш",
+      "bets": "Ставок",
+      "averageChance": "Средний шанс",
+      "won": "Выиграно:",
+      "lost": "Проиграно:",
+      "pending": "В ожидании:",
+      "successRate": "% успех",
+      "completed": "завершено",
+      "winRate": "WIN RATE"
+    },
+    "predictionsScreen": {
+      "active": "Активные",
+      "history": "История",
+      "liveInPlay": "В ИГРЕ",
+      "result": "РЕЗУЛЬТАТ:",
+      "status_WON": "ВЫИГРЫШ",
+      "status_LOST": "ПРОИГРЫШ",
+      "status_PENDING": "В ОЖИДАНИИ"
+    },
+    "editProfileScreen": {
+      "title": "Редактировать профиль",
+      "displayName": "Имя профиля",
+      "enterName": "Введите ваше имя",
+      "saveChanges": "Сохранить",
+      "updateAvatar": "Обновить фото",
+      "chooseGallery": "Выбрать из галереи",
+      "chooseSystem": "Системные аватарки",
+      "systemAvatars": "Готовые аватары",
+      "successMessage": "Профиль успешно обновлен!",
+      "errorGallery": "Нужно разрешение на доступ к фото."
+    },
+    "friends": {
+      "title": "Друзья",
+      "searchPlaceholder": "Поиск по имени...",
+      "yourFriends": "ВАШИ ДРУЗЬЯ",
+      "requests": "ЗАЯВКИ В ДРУЗЬЯ",
+      "searchResults": "РЕЗУЛЬТАТЫ ПОИСКА",
+      "addFriend": "Добавить",
+      "pending": "В ожидании",
+      "accept": "Принять",
+      "decline": "Отклонить",
+      "noFriends": "У вас пока нет друзей",
+      "noRequests": "Нет новых заявок",
+      "noResults": "Ничего не найдено"
+    },
+    "chat": {
+      "placeholder": "Сообщение...",
+      "online": "в сети",
+      "offline": "не в сети",
+      "typing": "печатает...",
+      "read": "прочитано",
+      "sent": "отправлено"
+    }
+  }
+}
