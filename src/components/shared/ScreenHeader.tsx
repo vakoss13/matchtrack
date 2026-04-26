@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Pressable, StyleSheet as RNStyleSheet } from 'react-native';
+import { View, Pressable, Animated } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Typography } from './Typography';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { Typography } from './Typography';
 
 interface ScreenHeaderProps {
     title: string;
@@ -28,37 +29,71 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
     subtitleColor
 }) => {
     const { theme } = useUnistyles();
+    const insets = useSafeAreaInsets();
     const navigation = useNavigation<DrawerNavigationProp<any>>();
+    
+    const scaleAnim = new Animated.Value(1);
+
+    const handlePressIn = () => {
+        Animated.spring(scaleAnim, {
+            toValue: 0.92,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const handlePressOut = () => {
+        Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 4,
+            tension: 40,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const renderIconButton = (icon: keyof typeof Ionicons.glyphMap, onPress: () => void, size = 28) => (
+        <Pressable 
+            onPress={onPress} 
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={({ pressed }) => [
+                styles.iconButton,
+                { opacity: pressed ? 0.7 : 1 }
+            ]}
+        >
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                <Ionicons name={icon} size={size} color={theme.colors.text} />
+            </Animated.View>
+        </Pressable>
+    );
 
     return (
-        <View style={styles.header}>
-            <View style={styles.left}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <View style={styles.sideContainer}>
                 {showBack ? (
-                    <Pressable onPress={onBack || (() => navigation.goBack())} style={styles.iconButton}>
-                        <Ionicons name="arrow-back" size={28} color={theme.colors.text} />
-                    </Pressable>
-                ) : showMenu && (
-                    <Pressable onPress={() => navigation.openDrawer()} style={styles.iconButton}>
-                        <Ionicons name="menu" size={28} color={theme.colors.text} />
-                    </Pressable>
-                )}
+                    renderIconButton('arrow-back', onBack || (() => navigation.goBack()))
+                ) : showMenu ? (
+                    renderIconButton('menu', () => navigation.openDrawer())
+                ) : null}
             </View>
 
             <View style={styles.titleContainer}>
-                <Typography variant="h2" bold style={styles.title} numberOfLines={1}>{title}</Typography>
+                <Typography variant="h2" align="center" numberOfLines={1}>
+                    {title}
+                </Typography>
                 {subtitle && (
-                    <Typography variant="caption" style={[styles.subtitle, subtitleColor ? { color: subtitleColor } : {}]} numberOfLines={1}>
+                    <Typography 
+                        variant="caption" 
+                        color={subtitleColor || theme.colors.primary} 
+                        style={styles.subtitle}
+                        numberOfLines={1}
+                    >
                         {subtitle}
                     </Typography>
                 )}
             </View>
 
-            <View style={styles.right}>
-                {rightIcon && (
-                    <Pressable onPress={onRightPress} style={styles.iconButton}>
-                        <Ionicons name={rightIcon} size={24} color={theme.colors.text} />
-                    </Pressable>
-                )}
+            <View style={[styles.sideContainer, styles.rightSide]}>
+                {rightIcon && renderIconButton(rightIcon, onRightPress || (() => {}), 24)}
             </View>
         </View>
     );
@@ -67,17 +102,33 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
 const styles = StyleSheet.create((theme) => ({
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingTop: 60,
-        paddingBottom: 10,
+        paddingHorizontal: theme.spacing?.md ?? 16,
+        paddingBottom: 12,
         backgroundColor: theme.colors.background,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.border + '20',
     },
-    left: { width: 44 },
-    right: { width: 44, alignItems: 'flex-end' },
-    titleContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    title: { textAlign: 'center' },
-    subtitle: { color: theme.colors.primary, fontSize: 12, marginTop: -2 },
-    iconButton: { padding: 4 }
+    sideContainer: {
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+    },
+    rightSide: {
+        alignItems: 'flex-end',
+    },
+    titleContainer: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    subtitle: {
+        marginTop: -2,
+    },
+    iconButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    }
 }));

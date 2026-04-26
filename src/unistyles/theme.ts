@@ -45,6 +45,7 @@ export const darkTheme = {
     body: 16,
     subtitle: 14,
     caption: 12,
+    tiny: 10,
   }
 } as const;
 

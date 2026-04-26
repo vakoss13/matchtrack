@@ -9,11 +9,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../components/shared/ScreenHeader';
 import { fetchUserPredictions } from '../services/api/predictions';
 import { fetchMatches } from '../services/api/football';
+import { PredictionItem } from '../components/shared/PredictionCard';
 
 export const StatsScreen = () => {
   const { theme } = useUnistyles();
   const { t } = useTranslation();
-  const [predictions, setPredictions] = useState<any[]>([]);
+  const [predictions, setPredictions] = useState<PredictionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -58,21 +59,23 @@ export const StatsScreen = () => {
     
     const validOdds = predictions.filter(p => p.odds && p.odds > 0);
     const averageOdds = validOdds.length > 0 
-        ? (validOdds.reduce((sum, p) => sum + p.odds, 0) / validOdds.length).toFixed(2)
+        ? (validOdds.reduce((sum, p) => sum + (p.odds || 0), 0) / validOdds.length).toFixed(2)
         : "0.00";
     
     return { total, finished: finished.length, won, lost, winRate, averageOdds };
   }, [predictions]);
 
   const StatItem = ({ title, value, icon, color, subtitle }: any) => (
-    <Card style={styles.statCard} variant="outline">
-      <View style={[styles.iconCircle, { backgroundColor: color + '15' }]}>
-        <Ionicons name={icon} size={24} color={color} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Typography variant="h2" bold color={theme.colors.text}>{value}</Typography>
-        <Typography variant="caption" color={theme.colors.subtext} bold style={{ marginTop: 2 }}>{title.toUpperCase()}</Typography>
-        {subtitle && <Typography variant="caption" color={color} style={{ fontSize: 10 }}>{subtitle}</Typography>}
+    <Card style={styles.statCard} variant="outline" padding="none">
+      <View style={styles.statInner}>
+        <View style={[styles.iconCircle, { backgroundColor: color + '15' }]}>
+            <Ionicons name={icon} size={22} color={color} />
+        </View>
+        <View style={styles.statContent}>
+            <Typography variant="h2" bold lineHeight={28}>{value}</Typography>
+            <Typography variant="tiny" bold color={theme.colors.subtext}>{title.toUpperCase()}</Typography>
+            {subtitle && <Typography variant="tiny" color={color} style={{ fontSize: 9, marginTop: 2 }}>{subtitle}</Typography>}
+        </View>
       </View>
     </Card>
   );
@@ -93,7 +96,9 @@ export const StatsScreen = () => {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadStatsData(); }} tintColor={theme.colors.primary} />}
       >
-        <Typography variant="h3" style={styles.sectionTitle}>{t('stats.overallSuccess')}</Typography>
+        <Typography variant="tiny" bold color={theme.colors.subtext} style={styles.sectionTitle}>
+            {t('stats.overallSuccess').toUpperCase()}
+        </Typography>
         
         <View style={styles.grid}>
           <StatItem title={t('stats.wins')} value={stats.won} icon="checkmark-circle" color={theme.colors.success} subtitle={`${stats.winRate}${t('stats.successRate')}`} />
@@ -102,25 +107,27 @@ export const StatsScreen = () => {
           <StatItem title={t('stats.averageChance')} value={stats.averageOdds} icon="stats-chart" color={theme.colors.secondary} />
         </View>
 
-        <Typography variant="h3" style={styles.sectionTitle}>{t('stats.activity')}</Typography>
-        <Card variant="outline" style={styles.mainScoreCard}>
+        <Typography variant="tiny" bold color={theme.colors.subtext} style={styles.sectionTitle}>
+            {t('stats.activity').toUpperCase()}
+        </Typography>
+        <Card variant="outline" style={styles.mainScoreCard} padding="none">
            <View style={styles.mainScoreContent}>
-              <View style={styles.mainCircle}>
+              <View style={[styles.mainCircle, { borderColor: theme.colors.primary }]}>
                 <Typography variant="h1" bold color={theme.colors.primary}>{stats.winRate}%</Typography>
-                <Typography variant="caption" color={theme.colors.subtext}>{t('stats.winRate')}</Typography>
+                <Typography variant="tiny" bold color={theme.colors.subtext}>{t('stats.winRate').toUpperCase()}</Typography>
               </View>
               <View style={styles.scoreDetails}>
                 <View style={styles.detailRow}>
                    <View style={[styles.dot, { backgroundColor: theme.colors.success }]} />
-                   <Typography variant="caption" color={theme.colors.text}>{t('stats.won')} {stats.won}</Typography>
+                   <Typography variant="caption" bold>{t('stats.won')} {stats.won}</Typography>
                 </View>
                 <View style={styles.detailRow}>
                    <View style={[styles.dot, { backgroundColor: '#FF4D4D' }]} />
-                   <Typography variant="caption" color={theme.colors.text}>{t('stats.lost')} {stats.lost}</Typography>
+                   <Typography variant="caption" bold>{t('stats.lost')} {stats.lost}</Typography>
                 </View>
                 <View style={styles.detailRow}>
                    <View style={[styles.dot, { backgroundColor: theme.colors.subtext }]} />
-                   <Typography variant="caption" color={theme.colors.text}>{t('stats.pending')} {stats.total - stats.finished}</Typography>
+                   <Typography variant="caption" bold>{t('stats.pending')} {stats.total - stats.finished}</Typography>
                 </View>
               </View>
            </View>
@@ -135,13 +142,15 @@ const styles = StyleSheet.create((theme) => ({
   loadingContainer: { flex: 1, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' },
   content: { padding: 20, paddingBottom: 120 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
-  statCard: { minWidth: '47%', padding: 16, gap: 12, borderRadius: 24, backgroundColor: theme.colors.surface },
-  iconCircle: { width: 44, height: 44, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  sectionTitle: { marginTop: 12, marginBottom: 16, fontSize: 13, color: theme.colors.subtext, letterSpacing: 2, fontWeight: '800' },
+  statCard: { flex: 1, minWidth: '45%', borderRadius: 24, backgroundColor: theme.colors.surface },
+  statInner: { padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  statContent: { flex: 1 },
+  iconCircle: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  sectionTitle: { marginTop: 12, marginBottom: 16, fontSize: 11, letterSpacing: 1.5 },
   mainScoreCard: { padding: 24, borderRadius: 32, backgroundColor: theme.colors.surface },
   mainScoreContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
-  mainCircle: { width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: theme.colors.primary, justifyContent: 'center', alignItems: 'center' },
+  mainCircle: { width: 130, height: 130, borderRadius: 65, borderWidth: 6, justifyContent: 'center', alignItems: 'center' },
   scoreDetails: { gap: 12 },
-  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   dot: { width: 8, height: 8, borderRadius: 4 }
 }));

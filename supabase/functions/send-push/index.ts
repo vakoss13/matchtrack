@@ -1,51 +1,55 @@
-import { serve } from "std/http/server"
-import { createClient } from "supabase"
+declare const Deno: any;
+
+import { createClient } from "@supabase/supabase-js"
 import { JWT } from "google-auth-library"
+
+interface WebhookPayload {
+  record: {
+    receiver_id: string;
+    sender_id: string;
+    text?: string;
+  };
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
-  // Обработка CORS (для тестов из браузера/Postman)
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const payload = await req.json()
+    const payload: WebhookPayload = await req.json()
     const { record } = payload
     
-    console.log('--- Incoming Webhook ---')
-    console.log('Payload:', JSON.stringify(payload, null, 2))
-
-    if (!record || !record.receiver_id) {
+    if (!record?.receiver_id) {
       throw new Error('Missing receiver_id in payload')
     }
 
-    // 1. Инициализируем Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const supabaseClient = createClient(supabaseUrl, supabaseKey)
 
-    // 2. Достаем данные получателя и отправителя
-    const [{ data: receiver }, { data: sender }] = await Promise.all([
-      supabase.from('profiles').select('fcm_token').eq('id', record.receiver_id).single(),
-      supabase.from('profiles').select('full_name').eq('id', record.sender_id).single()
+    const [receiverRes, senderRes] = await Promise.all([
+      supabaseClient.from('profiles').select('fcm_token').eq('id', record.receiver_id).single(),
+      supabaseClient.from('profiles').select('display_name').eq('id', record.sender_id).single()
     ])
 
+    const receiver = receiverRes.data
+    const sender = senderRes.data
+
     if (!receiver?.fcm_token) {
-      console.log(`[Skip] Receiver ${record.receiver_id} has no FCM token`)
       return new Response(JSON.stringify({ message: 'No token found' }), { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
       })
     }
 
-    // 3. Авторизация в Firebase через Service Account
-    const serviceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') ?? '{}')
+    const fbRaw = Deno.env.get('FIREBASE_SERVICE_ACCOUNT') ?? '{}'
+    const serviceAccount = JSON.parse(fbRaw)
     
     const client = new JWT({
       email: serviceAccount.client_email,
@@ -53,20 +57,23 @@ serve(async (req) => {
       scopes: ['https://www.googleapis.com/auth/cloud-platform'],
     })
 
-    const jwtToken = await client.getAccessToken()
+    const accessToken = await client.getAccessToken()
+    const bearerToken = accessToken.token
 
-    // 4. Отправка уведомления через Firebase HTTP v1 API
+    if (!bearerToken) {
+      throw new Error('Failed to get Firebase access token')
+    }
     const message = {
       message: {
         token: receiver.fcm_token,
         notification: {
-          title: sender?.full_name || 'MatchTrack Notification',
-          body: record.text || 'New message!',
+          title: sender?.display_name || 'MatchTrack',
+          body: record.text || 'Новое сообщение', 
         },
         data: {
           type: 'chat',
           friendId: String(record.sender_id),
-          friendName: sender?.full_name || '',
+          friendName: sender?.display_name || 'Пользователь',
           content: record.text || '',
         },
         android: {
@@ -86,15 +93,13 @@ serve(async (req) => {
       },
     }
 
-    console.log(`Sending push to ${record.receiver_id}...`)
-
     const fcmResponse = await fetch(
       `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwtToken.token}`,
+          'Authorization': `Bearer ${bearerToken}`,
         },
         body: JSON.stringify(message),
       }
@@ -103,11 +108,8 @@ serve(async (req) => {
     const result = await fcmResponse.json()
     
     if (!fcmResponse.ok) {
-      console.error('FCM Error:', result)
-      throw new Error(`FCM error: ${result.error?.message || 'Unknown error'}`)
+      throw new Error(`FCM error: ${JSON.stringify(result)}`)
     }
-
-    console.log('Success! Push ID:', result.name)
 
     return new Response(JSON.stringify(result), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -115,8 +117,8 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Function Error:', error.message)
-    return new Response(JSON.stringify({ error: error.message }), { 
+    const msg = error instanceof Error ? error.message : String(error)
+    return new Response(JSON.stringify({ error: msg }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400 
     })

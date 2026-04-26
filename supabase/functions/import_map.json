@@ -1,7 +1,6 @@
 {
   "imports": {
-    "std/http/server": "https://deno.land/std@0.177.0/http/server.ts",
-    "supabase": "https://esm.sh/@supabase/supabase-js@2.33.1",
-    "google-auth-library": "https://esm.sh/google-auth-library@9.0.0"
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+    "google-auth-library": "https://esm.sh/google-auth-library@9"
   }
 }

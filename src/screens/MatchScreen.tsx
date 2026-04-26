@@ -12,27 +12,9 @@ import { Typography } from '../components/shared/Typography';
 const FlashList = BaseFlashList as any; // React 19 Workaround
 
 import { ScreenHeader } from '../components/shared/ScreenHeader';
+import { MatchCard } from '../components/shared/MatchCard';
 import { supabase } from '../services/supabase';
 import { syncLiveMatches } from '../services/api/matchSync';
-
-const LiveBadge = () => {
-    const { theme } = useUnistyles();
-    const opacity = useRef(new Animated.Value(1)).current;
-    useEffect(() => {
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
-                Animated.timing(opacity, { toValue: 1, duration: 800, useNativeDriver: true })
-            ])
-        ).start();
-    }, []);
-    return (
-        <Animated.View style={[styles.liveContainer, { opacity }]}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>LIVE</Text>
-        </Animated.View>
-    );
-};
 
 export const MatchScreen = () => {
   const { theme } = useUnistyles();
@@ -52,16 +34,14 @@ export const MatchScreen = () => {
   useEffect(() => {
     loadAllData();
     
-    // Реал-тайм подписка на изменение счетов
     const channel = supabase
       .channel('live_scores')
       .on('postgres_changes', { 
-        event: '*', // Слушаем всё (INSERT/UPDATE), чтобы не пропустить голы
+        event: '*', 
         schema: 'public', 
         table: 'live_matches' 
       }, (payload) => {
         const updatedMatch = payload.new as any;
-        console.log('⚽ REALTIME SCORE UPDATE:', updatedMatch);
         
         setMatches(prev => prev.map(m => 
           m.id === updatedMatch.id 
@@ -81,7 +61,6 @@ export const MatchScreen = () => {
       })
       .subscribe();
 
-    // Запускаем синхронизацию (она сама проверит, пора ли обновлять API)
     const interval = setInterval(() => {
         syncLiveMatches();
     }, 45000); 
@@ -100,7 +79,7 @@ export const MatchScreen = () => {
       try {
         matchesData = await fetchMatches();
       } catch (e) {
-        console.warn('Matches fetch failed (likely API limit):', e);
+        console.warn('Matches fetch failed:', e);
       }
 
       try {
@@ -120,23 +99,6 @@ export const MatchScreen = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatMatchTime = (item: Match) => {
-    if (['LIVE', 'IN_PLAY', 'PAUSED'].includes(item.status)) return 'In Play';
-    if (item.status === 'FINISHED') return 'FT';
-
-    const date = new Date(item.utcDate);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(now.getDate() + 1);
-    const isTomorrow = date.toDateString() === tomorrow.toDateString();
-    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    if (isToday) return `${t('matchScreen.today')}, ${timeStr}`;
-    if (isTomorrow) return `${t('matchScreen.tomorrow')}, ${timeStr}`;
-    return `${date.getDate()} ${date.toLocaleString(i18n.language, { month: 'short' })}, ${timeStr}`;
   };
 
   const leagues = useMemo(() => {
@@ -202,49 +164,14 @@ export const MatchScreen = () => {
     return result;
   }, [filteredMatches, selectedLeague, searchQuery]);
 
-  const MatchCard = React.memo(({ item, onPress }: { item: Match, onPress: (m: Match) => void }) => {
-    const { theme } = useUnistyles();
-    const isLive = ['LIVE', 'IN_PLAY', 'PAUSED'].includes(item.status);
-    const score = item.score?.fullTime || { home: null, away: null };
-    
-    return (
-      <Pressable style={styles.card} onPress={() => onPress(item)}>
-        <View style={styles.cardHeader}>
-          <Text style={[styles.matchStatus, isLive && { color: theme.colors.live }]}>{isLive ? 'LIVE' : item.status}</Text>
-          {isLive && <LiveBadge />}
-        </View>
-        <View style={styles.scoreRow}>
-          <View style={styles.teamSide}>
-            <Image source={{ uri: item.homeTeam.crest || '' }} style={styles.logoImage} />
-            <Text style={styles.teamName} numberOfLines={1}>{item.homeTeam.name}</Text>
-          </View>
-          <View style={styles.centerScore}>
-            <Text style={[styles.scoreNumber, isLive && { color: theme.colors.live }]}>
-              {score.home !== null ? `${score.home} - ${score.away}` : 'VS'}
-            </Text>
-            <View style={[styles.timeBox, isLive && styles.timeBoxLive]}>
-                <Text style={[styles.matchTime, isLive && styles.matchTimeLive]}>
-                  {formatMatchTime(item)}
-                </Text>
-            </View>
-          </View>
-          <View style={styles.teamSide}>
-            <Image source={{ uri: item.awayTeam.crest || '' }} style={styles.logoImage} />
-            <Text style={styles.teamName} numberOfLines={1}>{item.awayTeam.name}</Text>
-          </View>
-        </View>
-      </Pressable>
-    );
-  });
-
   const handleOpenPredict = useCallback((match: Match) => {
     setSelectedMatch(match);
     setHomePred(0);
     setAwayPred(0);
   }, []);
 
-  const renderItem = useCallback(({ item }: { item: any }) => {
-    if (item.isHeader) {
+  const renderItem = useCallback(({ item }: { item: Match | any }) => {
+    if ('isHeader' in item && item.isHeader) {
       return (
         <View style={styles.headerItem}>
           <Typography variant="caption" bold color={theme.colors.primary}>
@@ -253,7 +180,7 @@ export const MatchScreen = () => {
         </View>
       );
     }
-    return <MatchCard item={item} onPress={handleOpenPredict} />;
+    return <MatchCard item={item as Match} onPress={handleOpenPredict} />;
   }, [theme.colors.primary, handleOpenPredict]);
 
   return (
@@ -286,9 +213,13 @@ export const MatchScreen = () => {
                 onPress={() => setSelectedLeague(league)}
                 style={[styles.filterChip, selectedLeague === league && styles.filterChipActive]}
               >
-                <Text style={[styles.filterChipText, selectedLeague === league && styles.filterChipTextActive]}>
+                <Typography 
+                  variant="caption" 
+                  bold 
+                  color={selectedLeague === league ? '#000' : theme.colors.text}
+                >
                   {league === 'All' ? t('matchScreen.all') : league}
-                </Text>
+                </Typography>
               </Pressable>
             ))}
           </ScrollView>
@@ -356,22 +287,6 @@ const styles = StyleSheet.create((theme) => ({
   filterChipActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   filterChipText: { color: theme.colors.text, fontSize: 13, fontWeight: '600' },
   filterChipTextActive: { color: '#000', fontWeight: '800' },
-  card: { backgroundColor: theme.colors.surface, borderRadius: 24, padding: 15, marginBottom: 15 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
-  matchStatus: { fontSize: 12, fontWeight: '800', color: theme.colors.subtext },
-  liveContainer: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.colors.live + '15', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.live },
-  liveText: { color: theme.colors.live, fontSize: 12, fontWeight: '900' },
-  scoreRow: { flexDirection: 'row', alignItems: 'center' },
-  teamSide: { flex: 1, alignItems: 'center', gap: 8 },
-  logoImage: { width: 44, height: 44, resizeMode: 'contain' },
-  teamName: { color: theme.colors.text, fontWeight: '600', fontSize: 12, textAlign: 'center' },
-  centerScore: { width: 100, alignItems: 'center' },
-  scoreNumber: { color: theme.colors.text, fontSize: 24, fontWeight: '900' },
-  matchTime: { color: theme.colors.primary, fontSize: 11, fontWeight: '800' },
-  timeBox: { backgroundColor: theme.colors.surfaceCard, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 8 },
-  timeBoxLive: { backgroundColor: theme.colors.live + '20' },
-  matchTimeLive: { color: theme.colors.live },
   headerItem: { paddingVertical: 10, paddingHorizontal: 5, marginBottom: 5 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
   modalContentCentered: { backgroundColor: theme.colors.surface, borderRadius: 28, padding: 24, gap: 20 },

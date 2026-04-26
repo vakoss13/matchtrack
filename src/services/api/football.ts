@@ -1,12 +1,9 @@
-/**
- * Football Data API Service
- * 
- * To use this service, register for a free API key at https://www.football-data.org/
- * and add it to your .env file as EXPO_PUBLIC_FOOTBALL_API_KEY.
- */
-
 const API_URL = 'https://api.football-data.org/v4';
 const API_KEY = process.env.EXPO_PUBLIC_FOOTBALL_API_KEY;
+
+const CACHE_TTL = 5 * 60 * 1000;
+let cachedMatches: Match[] | null = null;
+let lastFetchTime = 0;
 
 export interface MatchTeam {
   id: number;
@@ -41,10 +38,17 @@ export interface Match {
 }
 
 /**
- * Fetches upcoming and recent matches.
- * Note: Free tier is limited to certain competitions (PL, CL, etc.).
+ * Fetches upcoming and recent matches with caching.
  */
-export const fetchMatches = async (): Promise<Match[]> => {
+export const fetchMatches = async (force = false): Promise<Match[]> => {
+  const now = Date.now();
+  
+  // Если есть свежий кеш, возвращаем его
+  if (!force && cachedMatches && (now - lastFetchTime < CACHE_TTL)) {
+    console.log('📦 Returning cached matches (Age: ' + Math.round((now - lastFetchTime) / 1000) + 's)');
+    return cachedMatches;
+  }
+
   console.log('🔍 Checking API Key:', API_KEY ? 'Present (First 5 chars: ' + API_KEY.substring(0, 5) + '...)' : 'MISSING');
 
   if (!API_KEY) {
@@ -53,14 +57,14 @@ export const fetchMatches = async (): Promise<Match[]> => {
   }
 
   try {
-    // У API бесплатного тарифа лимит в 10 дней на один запрос.
-    // Сделаем два параллельных запроса: один на последние 10 дней, другой на будущие 10 дней.
     const datePastFrom = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const datePastTo = new Date(Date.now()).toISOString().split('T')[0];
 
-    const dateFutureFrom = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Начиная с завтрашнего
+    const dateFutureFrom = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const dateFutureTo = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+    console.log('🌐 Fetching fresh matches from API...');
+    
     const [pastRes, futureRes] = await Promise.all([
       fetch(`${API_URL}/matches?dateFrom=${datePastFrom}&dateTo=${datePastTo}`, {
         method: 'GET',
@@ -75,12 +79,14 @@ export const fetchMatches = async (): Promise<Match[]> => {
     if (!pastRes.ok) {
         const errorData = await pastRes.json();
         console.error('❌ API Error Detail (Past):', errorData);
+        if (pastRes.status === 429 && cachedMatches) return cachedMatches; // Фоллбек на кеш при ошибке лимита
         throw new Error(`API Error: ${errorData.message || pastRes.statusText}`);
     }
 
     if (!futureRes.ok) {
         const errorData = await futureRes.json();
         console.error('❌ API Error Detail (Future):', errorData);
+        if (futureRes.status === 429 && cachedMatches) return cachedMatches;
         throw new Error(`API Error: ${errorData.message || futureRes.statusText}`);
     }
 
@@ -88,15 +94,17 @@ export const fetchMatches = async (): Promise<Match[]> => {
     const futureData = await futureRes.json();
 
     const allMatches = [...(pastData.matches || []), ...(futureData.matches || [])];
-    
-    // Удалим дубликаты на всякий случай
     const uniqueMatches = Array.from(new Map(allMatches.map(m => [m.id, m])).values());
     
+    // Обновляем кеш
+    cachedMatches = uniqueMatches;
+    lastFetchTime = now;
+
     console.log('✅ Fetched matches count:', uniqueMatches.length);
     return uniqueMatches;
   } catch (error) {
     console.error('❌ Failed to fetch matches:', error);
-    return [];
+    return cachedMatches || []; // Возвращаем кеш, если запрос провалился
   }
 };
 

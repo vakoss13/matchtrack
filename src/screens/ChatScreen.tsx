@@ -23,7 +23,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
     const insets = useSafeAreaInsets();
     const flashListRef = useRef<any>(null);
     
-    // Refs for Realtime to avoid stale closures
     const userIdRef = useRef<string>('');
     const channelRef = useRef<any>(null);
     
@@ -32,7 +31,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-    // Navigation Bar and Keyboard Management
     useFocusEffect(
         useCallback(() => {
             if (Platform.OS === 'android') {
@@ -63,7 +61,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
         }, [theme])
     );
 
-    // Core Logic: Loading and Realtime
     useEffect(() => {
         const loadMessages = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -76,15 +73,11 @@ export const ChatScreen = ({ route, navigation }: any) => {
                 .select('*')
                 .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
                 .order('created_at', { ascending: true })
-                .limit(50);
+                .limit(100);
 
             if (!error && data) {
-                console.log(`✅ Loaded ${data.length} messages for friend ${friendId}`);
                 setMessages(data);
-                // Mark initial messages as read
                 setTimeout(() => markAsRead(), 500);
-            } else if (error) {
-                console.error('❌ Error loading messages:', error);
             }
 
             const roomId = [user.id, friendId].sort().join('-');
@@ -109,7 +102,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
                         setMessages(prev => {
                             if (prev.some(m => m.id === newMsg.id)) return prev;
                             
-                            // Optimistic replace
                             if (newMsg.sender_id === myId) {
                                 const optIndex = prev.findLastIndex(m => 
                                     m.sender_id === myId && m.text === newMsg.text && 
@@ -126,7 +118,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
                             return [...prev, newMsg];
                         });
 
-                        // If message is for us - mark as read instantly
                         if (newMsg.receiver_id === myId) {
                             markAsRead();
                         }
@@ -185,35 +176,10 @@ export const ChatScreen = ({ route, navigation }: any) => {
         };
     }, [friendId]);
 
-    // Typing self-cleanup
-    useEffect(() => {
-        let timer: any;
-        if (isFriendTyping) {
-            timer = setTimeout(() => setIsFriendTyping(false), 5000);
-        }
-        return () => clearTimeout(timer);
-    }, [isFriendTyping]);
-
-    // Broadcast our typing status
-    useEffect(() => {
-        if (channelRef.current && userId) {
-            channelRef.current.send({
-                type: 'broadcast',
-                event: 'typing',
-                payload: { user_id: userId, is_typing: inputText.length > 0 }
-            });
-        }
-    }, [inputText.length > 0]);
-
-    // Автоматический скролл больше не нужен, так как список инвертирован (inverted)
-    // Это уберет раздражающий прыжок при открытии чата
-
-
     const markAsRead = async () => {
         const myId = userIdRef.current;
         if (!myId || !friendId) return;
 
-        // 1. Update DB
         await supabase
             .from('messages')
             .update({ is_read: true })
@@ -221,7 +187,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
             .eq('sender_id', friendId)
             .eq('is_read', false);
 
-        // 2. Broadcast to friend
         if (channelRef.current) {
             channelRef.current.send({
                 type: 'broadcast',
@@ -231,7 +196,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
         }
     };
 
-    // Функция для форматирования даты заголовка
     const formatDateHeader = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
@@ -244,7 +208,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
         return date.toLocaleDateString([], { day: 'numeric', month: 'long' });
     };
 
-    // Группировка сообщений с вставкой дат
     const getGroupedMessages = () => {
         const grouped: any[] = [];
         let lastDate = '';
@@ -265,11 +228,10 @@ export const ChatScreen = ({ route, navigation }: any) => {
 
     useEffect(() => {
         if (isInitialLoad.current && messages.length > 0) {
-            // Прыгаем вниз мгновенно при первом входе, если есть сообщения
             setTimeout(() => {
                 flashListRef.current?.scrollToEnd({ animated: false });
                 isInitialLoad.current = false;
-            }, 100);
+            }, 500);
         }
     }, [messages.length]);
 
@@ -297,7 +259,6 @@ export const ChatScreen = ({ route, navigation }: any) => {
         setMessages(prev => [...prev, tempMsg]);
         setInputText('');
 
-        // Скроллим вниз при отправке своего сообщения
         setTimeout(() => flashListRef.current?.scrollToEnd({ animated: true }), 100);
 
         await supabase.from('messages').insert({

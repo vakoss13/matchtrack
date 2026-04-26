@@ -4,7 +4,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator, Platform } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 import { StatusBar } from 'expo-status-bar';
-import * as NavigationBar from 'expo-navigation-bar';
 import * as SystemUI from 'expo-system-ui';
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -21,19 +20,17 @@ import { createNavigationContainerRef } from '@react-navigation/native';
 import { requestUserPermission, registerAppWithFCM } from '../services/notifications';
 
 const Stack = createNativeStackNavigator();
-export const navigationRef = createNavigationContainerRef();
+export const navigationRef = createNavigationContainerRef<any>();
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { theme } = useUnistyles();
 
-  // 1. Настройка системных баров для Android (вызывается при смене темы)
+  // 1. Настройка системных баров для Android
   useEffect(() => {
     if (Platform.OS === 'android') {
       const backgroundColor = theme.colors.background || '#0D0D0E';
-      // Используем только SystemUI, так как NavigationBar.setBackgroundColorAsync 
-      // не поддерживается в режиме edge-to-edge и спамит варнингами.
       SystemUI.setBackgroundColorAsync(backgroundColor).catch(() => {});
     }
   }, [theme]);
@@ -58,8 +55,9 @@ export default function App() {
             handleNotificationClick(remoteMessage);
           }
         });
-      } catch (e) {
-        console.log('⚠️ Firebase listeners failed (likely Expo Go):', e.message);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Unknown error';
+        console.log('⚠️ Firebase listeners failed (likely Expo Go):', message);
       }
     };
 
@@ -67,7 +65,6 @@ export default function App() {
       if (!remoteMessage?.data) return;
       const { friendId, friendName } = remoteMessage.data;
       if (friendId && friendName && navigationRef.isReady()) {
-        // @ts-ignore
         navigationRef.navigate('Chat', { friendId, friendName });
       }
     };
@@ -75,12 +72,12 @@ export default function App() {
     setupNotifications();
   }, []);
 
-  // 3. Инициализация сессии и подписка на изменения авторизации (только при старте)
+  // 3. Инициализация сессии и подписка
   useEffect(() => {
     const checkInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
       } catch (e) {
         console.error('Initial session check error:', e);
       } finally {
@@ -90,15 +87,14 @@ export default function App() {
 
     checkInitialSession();
 
-    // Слушаем любые изменения авторизации (вход, выход, обновление токена)
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Auth state changed, event:', _event);
       setSession(session);
       setLoading(false);
     });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -111,7 +107,6 @@ export default function App() {
     );
   }
 
-  // Настройка темы навигации на основе Unistyles
   const navigationTheme = {
     ...DarkTheme,
     colors: {
@@ -128,7 +123,6 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <NavigationContainer theme={navigationTheme} ref={navigationRef}>
-        {/* Гвард навигации: если есть сессия и юзер — входим в приложение */}
         {session && session.user ? (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="DrawerRoot" component={DrawerNavigator} />
