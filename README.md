@@ -10,7 +10,7 @@ A React Native mobile app that provides live sports data, match predictions, and
 - Push notifications for match updates
 - Authentication (Google login)
 
- 🧠 Tech Stack
+🧠 Tech Stack
 -  React Native (Expo)
 - Supabase (Auth, Database, Realtime)
 - REST API integration (sports data)
@@ -24,3 +24,10 @@ A React Native mobile app that provides live sports data, match predictions, and
 - Predictions are stored and shared in real-time
 - Chat system uses Supabase realtime channels
 - Notifications are triggered for match updates
+
+📸 Screenshots
+![Authentication](auth.png)
+![Home](home.png)
+![Drawer Navigation](navigation.png)
+![Friends Screen](friends.png)
+![Chat](chat.png)
