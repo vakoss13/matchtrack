@@ -26,8 +26,8 @@ A React Native mobile app that provides live sports data, match predictions, and
 - Notifications are triggered for match updates
 
 📸 Screenshots
-![Authentication](auth.png)
-![Home](home.png)
-![Drawer Navigation](navigation.png)
-![Friends Screen](friends.png)
-![Chat](chat.png)
+![Authentication](auth.jng)
+![Home](home.jng)
+![Drawer Navigation](navigation.jng)
+![Friends Screen](friends.jng)
+![Chat](chat.jng)
